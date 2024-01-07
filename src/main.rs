@@ -19,14 +19,14 @@ fn main() {
     scheduler.loop_until_err(|| {
         driver.step();
         let colors: Vec<Rgb<_, u8>> = driver.read_colors();
-        update_gpio(&mut gpio_controller, &driver.read_colors());
+        update_gpio(&mut gpio_controller, &colors);
         Ok(())
     });
 }
 
 fn draw(
     sled: &mut Sled,
-    buffers: &BufferContainer,
+    _buffers: &BufferContainer,
     _filters: &Filters,
     time_info: &TimeInfo,
 ) -> Result<(), SledError> {
