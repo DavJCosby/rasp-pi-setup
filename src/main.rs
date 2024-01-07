@@ -6,7 +6,7 @@ use sled::{
     Sled, SledError,
 };
 
-const NUM_LEDS: usize = 60;
+const NUM_LEDS: i32 = 60;
 
 fn main() {
     let mut sled = Sled::new("./examples/config.toml").unwrap();
@@ -18,6 +18,7 @@ fn main() {
     let mut scheduler = Scheduler::fixed_hz(240.0);
     scheduler.loop_until_err(|| {
         driver.step();
+        let colors: Vec<Rgb<_, u8>> = driver.read_colors();
         update_gpio(&mut gpio_controller, &driver.read_colors());
         Ok(())
     });
@@ -51,11 +52,11 @@ fn construct_gpio_controller() -> Controller {
         .unwrap()
 }
 
-fn update_gpio(controller: &mut Controller, colors: &Vec<Rgb>) {
-    let leds = gpio_controller.leds_mut(0);
+fn update_gpio<T>(controller: &mut Controller, colors: &Vec<Rgb<T, u8>>) {
+    let leds = controller.leds_mut(0);
     for i in 0..NUM_LEDS {
-        let (r, g, b) = colors[i].as_components();
+        let (r, g, b) = colors[i as usize].into_components();
         leds[i] = [r, g, b, 0];
     }
-    gpio_controller.render().unwrap();
+    controller.render().unwrap();
 }
