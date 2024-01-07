@@ -15,7 +15,7 @@ fn main() {
     driver.mount(sled);
 
     let mut gpio_controller = construct_gpio_controller();
-    let mut scheduler = Scheduler::fixed_hz(240.0);
+    let mut scheduler = Scheduler::fixed_hz(500.0);
     scheduler.loop_until_err(|| {
         driver.step();
         let colors: Vec<Rgb<_, u8>> = driver.read_colors();
@@ -30,7 +30,7 @@ fn draw(
     _filters: &Filters,
     time_info: &TimeInfo,
 ) -> Result<(), SledError> {
-    sled.map(|color| color * 0.85);
+    sled.map(|led| led.color * 0.85);
     let _ = sled.set_at_angle(time_info.elapsed.as_secs_f32(), Rgb::new(1.0, 1.0, 1.0));
     Ok(())
 }
