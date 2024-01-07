@@ -9,7 +9,7 @@ use sled::{
 const NUM_LEDS: i32 = 60;
 
 fn main() {
-    let mut sled = Sled::new("./config.toml").unwrap();
+    let sled = Sled::new("./config.toml").unwrap();
     let mut driver = Driver::new();
     driver.set_draw_commands(draw);
     driver.mount(sled);
@@ -30,7 +30,7 @@ fn draw(
     _filters: &Filters,
     time_info: &TimeInfo,
 ) -> Result<(), SledError> {
-    sled.set_all(Rgb::new(0.0, 0.0, 0.0));
+    sled.map(|color| color * 0.85);
     let _ = sled.set_at_angle(time_info.elapsed.as_secs_f32(), Rgb::new(1.0, 1.0, 1.0));
     Ok(())
 }
