@@ -9,7 +9,7 @@ use sled::{
 const NUM_LEDS: i32 = 60;
 
 fn main() {
-    let mut sled = Sled::new("./examples/config.toml").unwrap();
+    let mut sled = Sled::new("./config.toml").unwrap();
     let mut driver = Driver::new();
     driver.set_draw_commands(draw);
     driver.mount(sled);
