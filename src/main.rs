@@ -31,7 +31,7 @@ fn draw(
     time_info: &TimeInfo,
 ) -> Result<(), SledError> {
     sled.set_all(Rgb::new(0.0, 0.0, 0.0));
-    sled.set_at_angle(time_info.elapsed.as_secs_f32(), Rgb::new(1.0, 1.0, 1.0))?;
+    let _ = sled.set_at_angle(time_info.elapsed.as_secs_f32(), Rgb::new(1.0, 1.0, 1.0));
     Ok(())
 }
 
