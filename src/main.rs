@@ -56,7 +56,7 @@ fn update_gpio<T>(controller: &mut Controller, colors: &Vec<Rgb<T, u8>>) {
     let leds = controller.leds_mut(0);
     for i in 0..NUM_LEDS {
         let (r, g, b) = colors[i as usize].into_components();
-        leds[i] = [r, g, b, 0];
+        leds[i as usize] = [r, g, b, 0];
     }
     controller.render().unwrap();
 }
