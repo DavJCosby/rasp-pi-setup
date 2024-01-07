@@ -21,7 +21,7 @@ fn main() {
     loop {
     //    let duration = start.elapsed().as_secs_f32();
         let leds = gpio_controller.leds_mut(0);
-        for i in 60 {
+        for i in 0..60 {
             leds[i] = [255, 255, 255, 0];
         }
         gpio_controller.render().unwrap();
