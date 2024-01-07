@@ -1,29 +1,58 @@
-use rs_ws281x::{ChannelBuilder, ControllerBuilder};
-use std::time::Instant;
+use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
+use sled::{
+    color::Rgb,
+    driver::{BufferContainer, Driver, Filters, TimeInfo},
+    scheduler::Scheduler,
+    Sled, SledError,
+};
+
+const NUM_LEDS: usize = 60;
+
 fn main() {
-    let mut gpio_controller = ControllerBuilder::new()
+    let mut sled = Sled::new("./examples/config.toml").unwrap();
+    let mut driver = Driver::new();
+    let mut gpio_controller = construct_gpio_controller();
+    let mut scheduler = Scheduler::fixed_hz(240.0);
+    scheduler.loop_until_err(|| {
+        driver.step();
+        update_gpio(&mut gpio_controller, &driver.read_colors());
+        Ok(())
+    });
+}
+
+fn draw(
+    sled: &mut Sled,
+    buffers: &BufferContainer,
+    _filters: &Filters,
+    time_info: &TimeInfo,
+) -> Result<(), SledError> {
+    sled.set_all(Rgb::new(0.0, 0.0, 0.0));
+    sled.set_at_angle(time_info.elapsed.as_secs_f32(), Rgb::new(1.0, 1.0, 1.0))?;
+    Ok(())
+}
+
+fn construct_gpio_controller() -> Controller {
+    ControllerBuilder::new()
         .freq(800_000)
         .dma(10)
         .channel(
             0,
             ChannelBuilder::new()
                 .pin(18)
-                .count(60)
+                .count(NUM_LEDS)
                 .strip_type(rs_ws281x::StripType::Ws2811Gbr)
                 .brightness(255)
                 .build(),
         )
         .build()
-        .unwrap();
+        .unwrap()
+}
 
-    // let start = Instant::now();
-    // let mut last = 0.0;
-    loop {
-    //    let duration = start.elapsed().as_secs_f32();
-        let leds = gpio_controller.leds_mut(0);
-        for i in 0..60 {
-            leds[i] = [255, 255, 255, 0];
-        }
-        gpio_controller.render().unwrap();
+fn update_gpio(controller: &mut Controller, colors: &Vec<Rgb>) {
+    let leds = gpio_controller.leds_mut(0);
+    for i in 0..NUM_LEDS {
+        let (r, g, b) = colors[i].as_components();
+        leds[i] = [r, g, b, 0];
     }
+    gpio_controller.render().unwrap();
 }
