@@ -11,6 +11,9 @@ const NUM_LEDS: usize = 60;
 fn main() {
     let mut sled = Sled::new("./examples/config.toml").unwrap();
     let mut driver = Driver::new();
+    driver.set_draw_commands(draw);
+    driver.mount(sled);
+
     let mut gpio_controller = construct_gpio_controller();
     let mut scheduler = Scheduler::fixed_hz(240.0);
     scheduler.loop_until_err(|| {
