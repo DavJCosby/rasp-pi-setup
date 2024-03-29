@@ -1,27 +1,25 @@
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
 use sled::{
-    color::Rgb,
+    color::{Rgb, Srgb},
     driver::{BufferContainer, Driver, Filters, TimeInfo},
     scheduler::Scheduler,
     Sled, SledError,
-    Vec2
 };
-
-const NUM_LEDS: i32 = 550;
 
 fn main() {
     let sled = Sled::new("./config.toml").unwrap();
+    let num_leds = sled.num_leds();
     let mut driver = Driver::new();
     driver.set_draw_commands(draw);
     driver.mount(sled);
 
-    let mut gpio_controller = construct_gpio_controller();
-    let mut scheduler = Scheduler::fixed_hz(512.0);
-    loop {
+    let mut gpio_controller = construct_gpio_controller(num_leds);
+    let mut scheduler = Scheduler::new(512.0);
+    scheduler.loop_forever(|| {
         driver.step();
-        let colors: Vec<Rgb<_, u8>> = driver.read_colors();
-        update_gpio(&mut gpio_controller, &colors);
-    }
+        let colors = driver.colors_coerced::<u8>();
+        update_gpio(&mut gpio_controller, colors);
+    })
 }
 
 fn draw(
@@ -31,13 +29,16 @@ fn draw(
     time_info: &TimeInfo,
 ) -> Result<(), SledError> {
     sled.map(|led| led.color * 0.95);
-    //sled.set_vertices(Rgb::new(1.0, 1.0, 1.0));
-    sled.set_at_dist((time_info.elapsed.as_secs_f32() * 0.6 )% 4.0, Rgb::new(1.0, 1.0, 1.0));
-    //let _ = sled.set_at_angle(time_info.elapsed.as_secs_f32() * 0.25, Rgb::new(1.0, 1.0, 1.0));
+
+    sled.set_at_dist(
+        (time_info.elapsed.as_secs_f32() * 0.6) % 4.0,
+        Rgb::new(1.0, 1.0, 1.0),
+    );
+
     Ok(())
 }
 
-fn construct_gpio_controller() -> Controller {
+fn construct_gpio_controller(num_leds: usize) -> Controller {
     ControllerBuilder::new()
         .freq(800_000)
         .dma(10)
@@ -45,7 +46,7 @@ fn construct_gpio_controller() -> Controller {
             0,
             ChannelBuilder::new()
                 .pin(18)
-                .count(NUM_LEDS)
+                .count(num_leds as i32)
                 .strip_type(rs_ws281x::StripType::Ws2811Gbr)
                 .brightness(255)
                 .build(),
@@ -54,11 +55,14 @@ fn construct_gpio_controller() -> Controller {
         .unwrap()
 }
 
-fn update_gpio<T>(controller: &mut Controller, colors: &Vec<Rgb<T, u8>>) {
+fn update_gpio(controller: &mut Controller, colors: impl Iterator<Item = Srgb<u8>>) {
     let leds = controller.leds_mut(0);
-    for i in 0..NUM_LEDS {
-        let (r, g, b) = colors[i as usize].into_components();
-        leds[i as usize] = [r, g, b, 0];
+
+    let mut i = 0;
+    for color in colors {
+        leds[i] = [color.red, color.green, color.blue, 0];
+        i += 1;
     }
+
     controller.render().unwrap();
 }
