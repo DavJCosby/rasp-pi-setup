@@ -2,7 +2,6 @@ use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
 use sled::{
     color::{Rgb, Srgb},
     driver::{BufferContainer, Driver, Filters, TimeInfo},
-    scheduler::Scheduler,
     Sled, SledError,
 };
 
@@ -14,12 +13,14 @@ fn main() {
     driver.mount(sled);
 
     let mut gpio_controller = construct_gpio_controller(num_leds);
-    let mut scheduler = Scheduler::new(512.0);
-    scheduler.loop_forever(|| {
+    //let mut scheduler = Scheduler::new(512.0);
+    //scheduler.loop_forever(|| {
+    loop {
         driver.step();
         let colors = driver.colors_coerced::<u8>();
         update_gpio(&mut gpio_controller, colors);
-    })
+    //})
+}
 }
 
 fn draw(

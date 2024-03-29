@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 rs_ws281x = "0.5.1"
-sled = {git = "https://github.com/DavJCosby/sled/"}
+sled = {git = "https://github.com/DavJCosby/sled/", default_features = false, features = ["drivers"]}
 
 [profile.release]
 lto = true
