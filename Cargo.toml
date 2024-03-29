@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 rs_ws281x = "0.5.1"
 sled = {git = "https://github.com/DavJCosby/sled/"}
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
