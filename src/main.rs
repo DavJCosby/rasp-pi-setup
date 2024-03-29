@@ -4,9 +4,10 @@ use sled::{
     driver::{BufferContainer, Driver, Filters, TimeInfo},
     scheduler::Scheduler,
     Sled, SledError,
+    Vec2
 };
 
-const NUM_LEDS: i32 = 60;
+const NUM_LEDS: i32 = 550;
 
 fn main() {
     let sled = Sled::new("./config.toml").unwrap();
@@ -15,13 +16,12 @@ fn main() {
     driver.mount(sled);
 
     let mut gpio_controller = construct_gpio_controller();
-    let mut scheduler = Scheduler::fixed_hz(500.0);
-    scheduler.loop_until_err(|| {
+    let mut scheduler = Scheduler::fixed_hz(512.0);
+    loop {
         driver.step();
         let colors: Vec<Rgb<_, u8>> = driver.read_colors();
         update_gpio(&mut gpio_controller, &colors);
-        Ok(())
-    });
+    }
 }
 
 fn draw(
@@ -30,8 +30,10 @@ fn draw(
     _filters: &Filters,
     time_info: &TimeInfo,
 ) -> Result<(), SledError> {
-    sled.map(|led| led.color * 0.85);
-    let _ = sled.set_at_angle(time_info.elapsed.as_secs_f32(), Rgb::new(1.0, 1.0, 1.0));
+    sled.map(|led| led.color * 0.95);
+    //sled.set_vertices(Rgb::new(1.0, 1.0, 1.0));
+    sled.set_at_dist((time_info.elapsed.as_secs_f32() * 0.6 )% 4.0, Rgb::new(1.0, 1.0, 1.0));
+    //let _ = sled.set_at_angle(time_info.elapsed.as_secs_f32() * 0.25, Rgb::new(1.0, 1.0, 1.0));
     Ok(())
 }
 
