@@ -1,10 +1,10 @@
-use rand::rngs::ThreadRng;
 use rand::Rng;
 use sled::driver::{BufferContainer, Driver, Filters, TimeInfo};
 use sled::{color::Rgb, Sled, SledError, Vec2};
 
 const NUM_STARS: usize = 5000;
 const VELOCITY: f32 = 3.0;
+const DIRECTION: Vec2 = Vec2::new(-0.5547, -0.83205);
 
 #[allow(dead_code)]
 pub fn build_driver() -> Driver {
@@ -26,8 +26,19 @@ fn startup(
     let center = sled.center_point();
     let mut rng = rand::thread_rng();
 
+    let orth = DIRECTION.perp();
+
     for _ in 0..NUM_STARS {
-        stars.push(random_spawn_location(&mut rng, center));
+        let sign = match rng.gen_bool(0.5) {
+            true => 1.0,
+            false => -1.0,
+        };
+
+        let spawn_pos = center
+            + (DIRECTION * rng.gen_range(50.0..250.0))
+            + (orth * rng.gen_range(0.45..15.0) * sign);
+
+        stars.push(spawn_pos);
     }
 
     let colors = buffers.create_buffer::<Rgb>("colors");
@@ -58,10 +69,23 @@ fn compute(
     let stars = buffers.get_buffer_mut::<Vec2>("stars")?;
     let center = sled.center_point();
 
+    let orth = DIRECTION.perp();
+
     for star in stars {
-        star.y -= VELOCITY * delta;
-        if star.y < -50.0 {
-            *star = random_spawn_location(&mut rng, center)
+        let dq = (*star - center).length_squared();
+        if dq > 62725.0 {
+            let sign = match rng.gen_bool(0.5) {
+                true => 1.0,
+                false => -1.0,
+            };
+
+            let spawn_pos = center
+                + (DIRECTION * rng.gen_range(50.0..250.0))
+                + (orth * rng.gen_range(0.45..15.0) * sign);
+
+            *star = spawn_pos;
+        } else {
+            *star -= DIRECTION * VELOCITY * delta;
         }
     }
 
@@ -78,7 +102,7 @@ fn draw(
     let center = sled.center_point();
     let delta = time_info.delta.as_secs_f32();
 
-    let fade_amount = 1.0 - (delta * 7.5);
+    let fade_amount = 1.0 - (delta * 5.0);
 
     sled.for_each(|led| led.color *= fade_amount);
 
@@ -88,18 +112,10 @@ fn draw(
         let c = *buffers.get_buffer_item::<Rgb>("colors", i % 10)?;
         sled.modulate_at_dir(d, |led| {
             let d_sq = d.length_squared();
-            led.color + (c / d_sq)
+            led.color + (c * 1.5 / d_sq)
         });
         i += 1;
     }
 
     Ok(())
-}
-
-fn random_spawn_location(rng: &mut ThreadRng, center: Vec2) -> Vec2 {
-    let sign = match rng.gen_bool(0.5) {
-        true => 1.0,
-        false => -1.0,
-    };
-    center + Vec2::new(rng.gen_range(0.85..15.0) * sign, rng.gen_range(40.0..250.0))
 }
