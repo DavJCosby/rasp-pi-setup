@@ -72,12 +72,15 @@ fn draw(
     sled: &mut Sled,
     buffers: &BufferContainer,
     _filters: &Filters,
-    _time_info: &TimeInfo,
+    time_info: &TimeInfo,
 ) -> Result<(), SledError> {
     let stars = buffers.get_buffer::<Vec2>("stars")?;
     let center = sled.center_point();
+    let delta = time_info.delta.as_secs_f32();
 
-    sled.for_each(|led| led.color *= 0.98);
+    let fade_amount = 1.0 - (delta * 7.5);
+
+    sled.for_each(|led| led.color *= fade_amount);
 
     let mut i = 0;
     for star in stars {
