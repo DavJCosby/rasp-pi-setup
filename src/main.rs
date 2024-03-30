@@ -1,12 +1,12 @@
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
 use sled::{color::Srgb, Sled};
 
-mod ripples;
+mod comet;
 
 fn main() {
     let sled = Sled::new("./config.toml").unwrap();
     let num_leds = sled.num_leds();
-    let mut driver = ripples::build_driver();
+    let mut driver = comet::build_driver();
     driver.mount(sled);
 
     let mut gpio_controller = construct_gpio_controller(num_leds);
