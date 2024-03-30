@@ -4,7 +4,7 @@ use sled::{color::Rgb, Sled, SledError, Vec2};
 
 const NUM_STARS: usize = 5000;
 const VELOCITY: f32 = 3.0;
-const DIRECTION: Vec2 = Vec2::new(-0.5547, -0.83205);
+const DIRECTION: Vec2 = Vec2::new(-0.7071, -0.7071);
 
 #[allow(dead_code)]
 pub fn build_driver() -> Driver {
@@ -35,7 +35,7 @@ fn startup(
         };
 
         let spawn_pos = center
-            + (DIRECTION * rng.gen_range(50.0..250.0))
+            + (DIRECTION * rng.gen_range(50.0..200.0))
             + (orth * rng.gen_range(0.45..15.0) * sign);
 
         stars.push(spawn_pos);
@@ -72,20 +72,21 @@ fn compute(
     let orth = DIRECTION.perp();
 
     for star in stars {
-        let dq = (*star - center).length_squared();
-        if dq > 62725.0 {
-            let sign = match rng.gen_bool(0.5) {
-                true => 1.0,
-                false => -1.0,
-            };
+        *star -= DIRECTION * VELOCITY * delta;
+        if star.x.signum() != DIRECTION.x.signum() || star.y.signum() != DIRECTION.y.signum() {
+            let dq = (*star - center).length_squared();
+            if dq > 3600.0 {
+                let sign = match rng.gen_bool(0.5) {
+                    true => 1.0,
+                    false => -1.0,
+                };
 
-            let spawn_pos = center
-                + (DIRECTION * rng.gen_range(50.0..250.0))
-                + (orth * rng.gen_range(0.45..15.0) * sign);
+                let spawn_pos = center
+                    + (DIRECTION * rng.gen_range(50.0..200.0))
+                    + (orth * rng.gen_range(0.45..15.0) * sign);
 
-            *star = spawn_pos;
-        } else {
-            *star -= DIRECTION * VELOCITY * delta;
+                *star = spawn_pos;
+            }
         }
     }
 
@@ -102,7 +103,7 @@ fn draw(
     let center = sled.center_point();
     let delta = time_info.delta.as_secs_f32();
 
-    let fade_amount = 1.0 - (delta * 5.0);
+    let fade_amount = 1.0 - (delta * 7.5);
 
     sled.for_each(|led| led.color *= fade_amount);
 
@@ -112,7 +113,7 @@ fn draw(
         let c = *buffers.get_buffer_item::<Rgb>("colors", i % 10)?;
         sled.modulate_at_dir(d, |led| {
             let d_sq = d.length_squared();
-            led.color + (c * 1.5 / d_sq)
+            led.color + (c * 1.0 / d_sq)
         });
         i += 1;
     }
