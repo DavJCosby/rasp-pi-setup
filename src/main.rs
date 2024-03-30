@@ -1,7 +1,7 @@
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
 use sled::{color::Srgb, Sled};
 
-mod ripples;
+mod warpspeed;
 
 fn main() {
     let sled = Sled::new("./config.toml").unwrap();
