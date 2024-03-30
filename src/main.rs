@@ -1,15 +1,12 @@
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
-use sled::{
-    color::{Rgb, Srgb},
-    driver::{BufferContainer, Driver, Filters, TimeInfo},
-    Sled, SledError,
-};
+use sled::{color::Srgb, Sled};
+
+mod ripples;
 
 fn main() {
     let sled = Sled::new("./config.toml").unwrap();
     let num_leds = sled.num_leds();
-    let mut driver = Driver::new();
-    driver.set_draw_commands(draw);
+    let mut driver = ripples::build_driver();
     driver.mount(sled);
 
     let mut gpio_controller = construct_gpio_controller(num_leds);
@@ -19,24 +16,8 @@ fn main() {
         driver.step();
         let colors = driver.colors_coerced::<u8>();
         update_gpio(&mut gpio_controller, colors);
+    }
     //})
-}
-}
-
-fn draw(
-    sled: &mut Sled,
-    _buffers: &BufferContainer,
-    _filters: &Filters,
-    time_info: &TimeInfo,
-) -> Result<(), SledError> {
-    sled.map(|led| led.color * 0.95);
-
-    sled.set_at_dist(
-        (time_info.elapsed.as_secs_f32() * 0.6) % 4.0,
-        Rgb::new(1.0, 1.0, 1.0),
-    );
-
-    Ok(())
 }
 
 fn construct_gpio_controller(num_leds: usize) -> Controller {
