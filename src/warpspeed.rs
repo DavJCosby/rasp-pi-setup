@@ -103,7 +103,7 @@ fn draw(
     let center = sled.center_point();
     let delta = time_info.delta.as_secs_f32();
 
-    let fade_amount = 1.0 - (delta * 12.0);
+    let fade_amount = 1.0 - (delta * 25.0);
 
     sled.for_each(|led| led.color *= fade_amount);
 
@@ -113,7 +113,7 @@ fn draw(
         let c = *buffers.get_buffer_item::<Rgb>("colors", i % 10)?;
         sled.modulate_at_dir(d, |led| {
             let d_sq = (d.length() - led.distance()).powi(2);
-            led.color + (c * 1.0 / d_sq)
+            led.color + (c / d_sq)
         });
         i += 1;
     }
