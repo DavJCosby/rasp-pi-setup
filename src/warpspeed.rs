@@ -112,7 +112,7 @@ fn draw(
         let d = Vec2::new(star.x - center.x, star.y - center.y);
         let c = *buffers.get_buffer_item::<Rgb>("colors", i % 10)?;
         sled.modulate_at_dir(d, |led| {
-            let d_sq = d.length_squared();
+            let d_sq = ((*star - led.position()).length() - led.distance()).powi(2);
             led.color + (c * 1.0 / d_sq)
         });
         i += 1;
