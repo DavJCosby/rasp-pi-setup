@@ -14,7 +14,7 @@ fn main() {
     //scheduler.loop_forever(|| {
     loop {
         driver.step();
-        let colors = driver.colors_coerced::<u8>();
+        let colors = driver.colors();
         update_gpio(&mut gpio_controller, colors);
     }
     //})
@@ -37,12 +37,12 @@ fn construct_gpio_controller(num_leds: usize) -> Controller {
         .unwrap()
 }
 
-fn update_gpio(controller: &mut Controller, colors: impl Iterator<Item = Srgb<u8>>) {
+fn update_gpio(controller: &mut Controller, colors: impl Iterator<Item = Srgb<f32>>) {
     let leds = controller.leds_mut(0);
 
     let mut i = 0;
     for color in colors {
-        leds[i] = [color.red / (1.0 + color.red), color.green / (1.0 + color.green), color.blue / (1.0 + color.blue), 0];
+        leds[i] = [(color.red / (1.0 + color.red)) as u8, (color.green / (1.0 + color.green)) as u8, (color.blue / (1.0 + color.blue)) as u8, 0];
         i += 1;
     }
 
