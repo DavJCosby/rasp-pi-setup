@@ -35,8 +35,8 @@ fn startup(
         };
 
         let spawn_pos = center
-            + (DIRECTION * rng.gen_range(50.0..500.0))
-            + (orth * rng.gen_range(3.45..40.0) * sign);
+            + (DIRECTION * rng.gen_range(40.0..300.0))
+            + (orth * rng.gen_range(1.45..35.0) * sign);
 
         stars.push(spawn_pos);
     }
@@ -73,17 +73,17 @@ fn compute(
 
     for star in stars {
         *star -= DIRECTION * VELOCITY * delta;
-        if star.x.signum() != DIRECTION.x.signum() || star.y.signum() != DIRECTION.y.signum() {
+        if star.x.signum() != DIRECTION.x.signum() && star.y.signum() != DIRECTION.y.signum() {
             let dq = (*star - center).length_squared();
-            if dq > 3200.0 {
+            if dq > 1000.0 {
                 let sign = match rng.gen_bool(0.5) {
                     true => 1.0,
                     false => -1.0,
                 };
 
                 let spawn_pos = center
-                    + (DIRECTION * rng.gen_range(50.0..500.0))
-                    + (orth * rng.gen_range(3.5..40.0) * sign);
+                    + (DIRECTION * rng.gen_range(40.0..300.0))
+                    + (orth * rng.gen_range(1.5..35.0) * sign);
 
                 *star = spawn_pos;
             }
@@ -103,7 +103,7 @@ fn draw(
     let center = sled.center_point();
     let delta = time_info.delta.as_secs_f32();
 
-    let fade_amount = 1.0 - (delta * 12.0);
+    let fade_amount = 1.0 - (delta * 25.0);
 
     sled.for_each(|led| led.color *= fade_amount);
 
