@@ -3,7 +3,7 @@ use sled::driver::{BufferContainer, Driver, Filters, TimeInfo};
 use sled::{color::Rgb, Sled, SledError, Vec2};
 
 const NUM_STARS: usize = 5000;
-const VELOCITY: f32 = 3.0;
+const VELOCITY: f32 = 6.0;
 const DIRECTION: Vec2 = Vec2::new(-0.7071, -0.7071);
 
 #[allow(dead_code)]
@@ -35,8 +35,8 @@ fn startup(
         };
 
         let spawn_pos = center
-            + (DIRECTION * rng.gen_range(50.0..200.0))
-            + (orth * rng.gen_range(0.45..15.0) * sign);
+            + (DIRECTION * rng.gen_range(50.0..500.0))
+            + (orth * rng.gen_range(3.45..40.0) * sign);
 
         stars.push(spawn_pos);
     }
@@ -75,15 +75,15 @@ fn compute(
         *star -= DIRECTION * VELOCITY * delta;
         if star.x.signum() != DIRECTION.x.signum() || star.y.signum() != DIRECTION.y.signum() {
             let dq = (*star - center).length_squared();
-            if dq > 3600.0 {
+            if dq > 3200.0 {
                 let sign = match rng.gen_bool(0.5) {
                     true => 1.0,
                     false => -1.0,
                 };
 
                 let spawn_pos = center
-                    + (DIRECTION * rng.gen_range(50.0..200.0))
-                    + (orth * rng.gen_range(0.45..15.0) * sign);
+                    + (DIRECTION * rng.gen_range(50.0..500.0))
+                    + (orth * rng.gen_range(3.5..40.0) * sign);
 
                 *star = spawn_pos;
             }
@@ -103,7 +103,7 @@ fn draw(
     let center = sled.center_point();
     let delta = time_info.delta.as_secs_f32();
 
-    let fade_amount = 1.0 - (delta * 7.5);
+    let fade_amount = 1.0 - (delta * 12.0);
 
     sled.for_each(|led| led.color *= fade_amount);
 
@@ -112,7 +112,7 @@ fn draw(
         let d = Vec2::new(star.x - center.x, star.y - center.y);
         let c = *buffers.get_buffer_item::<Rgb>("colors", i % 10)?;
         sled.modulate_at_dir(d, |led| {
-            let d_sq = ((*star - led.position()).length() - led.distance()).powi(2);
+            let d_sq = (d.length() - led.distance()).powi(2);
             led.color + (c * 1.0 / d_sq)
         });
         i += 1;
