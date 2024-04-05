@@ -6,24 +6,21 @@ mod ripples;
 fn main() {
     let sled = Sled::new("./config.toml").unwrap();
     let num_leds = sled.num_leds();
+
     let mut driver = ripples::build_driver();
     driver.mount(sled);
 
     let mut gpio_controller = construct_gpio_controller(num_leds);
-    //let mut scheduler = Scheduler::new(512.0);
-    //scheduler.loop_forever(|| {
+
     loop {
         driver.step();
         let colors = driver.colors_coerced::<u8>();
         update_gpio(&mut gpio_controller, colors);
     }
-    //})
 }
 
 fn construct_gpio_controller(num_leds: usize) -> Controller {
     ControllerBuilder::new()
-        .freq(800_000)
-        .dma(10)
         .channel(
             0,
             ChannelBuilder::new()
