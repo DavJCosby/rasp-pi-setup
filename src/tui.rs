@@ -31,6 +31,16 @@ pub enum Effects {
     Warpspeed,
 }
 
+impl Effects {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Effects::Comet => "Comet",
+            Effects::Ripples => "Ripples",
+            Effects::Warpspeed => "Warpspeed",
+        }
+    }
+}
+
 impl Default for SelectableWidget {
     fn default() -> Self {
         SelectableWidget::Effects
@@ -109,10 +119,18 @@ impl App {
 
             frame.render_stateful_widget(list, layout[0], &mut self.effects_list_state);
 
-            let visualizer_title = match self.should_pause {
-                true => "Visualizer [PAUSED]",
-                false => "Visualizer [RUNNING]",
+            let effect = match &self.current_effect {
+                Some(e) => e.as_str(),
+                None => "BLANK",
             };
+
+            let running_state = if self.should_pause {
+                "PAUSED"
+            } else {
+                "RUNNING"
+            };
+
+            let visualizer_title = format!("{} [{}]", effect, running_state);
 
             frame.render_widget(
                 Block::new()
