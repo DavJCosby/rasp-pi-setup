@@ -224,17 +224,21 @@ impl App {
                 ))
             }
             KeyCode::Enter => {
-                self.should_pause = false;
                 if let Some(e) = self.effects_list_state.selected() {
                     let old_effect = self.current_effect;
 
                     let effects = self.drivers.keys().into_iter().collect::<Vec<&Effect>>();
                     self.current_effect = *effects[e];
 
-                    // if they hit enter on their current selection, simply pause and allow them to select a different effect.
+                    // handling if they hit enter on their current selection
                     if self.current_effect == old_effect {
-                        self.should_pause = true;
-                        return;
+                        if self.should_pause == false {
+                            self.should_pause = true;
+                            return;
+                        } else {
+                            self.should_pause = false;
+                            return;
+                        }
                     }
 
                     let old_driver = self.drivers.get_mut(&old_effect).unwrap();
@@ -242,7 +246,8 @@ impl App {
                     let new_driver = self.drivers.get_mut(&self.current_effect).unwrap();
                     new_driver.mount(sled);
 
-                    self.selected_widget = SelectableWidget::Settings
+                    self.selected_widget = SelectableWidget::Settings;
+                    self.should_pause = false;
                 }
             }
 
