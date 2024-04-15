@@ -137,10 +137,17 @@ impl App {
 
             frame.render_stateful_widget(list, layout[0], &mut self.effects_list_state);
 
+            let effects_title_style = if let SelectableWidget::Effects = self.selected_widget {
+                Style::default().reversed()
+            } else {
+                Style::default()
+            };
+
             frame.render_widget(
                 Block::new()
                     .borders(Borders::ALL)
                     .title(effects_title)
+                    .title_style(effects_title_style)
                     .yellow(),
                 layout[0],
             );
@@ -163,10 +170,17 @@ impl App {
                 layout[1],
             );
 
+            let settings_title_style = if let SelectableWidget::Settings = self.selected_widget {
+                Style::default().reversed()
+            } else {
+                Style::default()
+            };
+
             frame.render_widget(
                 Block::new()
                     .borders(Borders::ALL)
                     .title(" Settings ")
+                    .title_style(settings_title_style)
                     .magenta(),
                 layout[2],
             );
@@ -190,7 +204,7 @@ impl App {
         } else {
             match self.selected_widget {
                 SelectableWidget::Effects => self.handle_input_effects(key_code),
-                SelectableWidget::Settings => todo!(),
+                SelectableWidget::Settings => self.handle_input_settings(key_code),
             }
         }
     }
@@ -217,13 +231,30 @@ impl App {
                     let effects = self.drivers.keys().into_iter().collect::<Vec<&Effect>>();
                     self.current_effect = *effects[e];
 
+                    // if they hit enter on their current selection, simply pause and allow them to select a different effect.
+                    if self.current_effect == old_effect {
+                        self.should_pause = true;
+                        return;
+                    }
+
                     let old_driver = self.drivers.get_mut(&old_effect).unwrap();
                     let sled = old_driver.dismount();
                     let new_driver = self.drivers.get_mut(&self.current_effect).unwrap();
                     new_driver.mount(sled);
+
+                    self.selected_widget = SelectableWidget::Settings
                 }
             }
 
+            KeyCode::Right => self.selected_widget = SelectableWidget::Settings,
+
+            _ => {}
+        }
+    }
+
+    fn handle_input_settings(&mut self, key_code: KeyCode) {
+        match key_code {
+            KeyCode::Left => self.selected_widget = SelectableWidget::Effects,
             _ => {}
         }
     }

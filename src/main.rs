@@ -22,6 +22,7 @@ fn main() -> Result<()> {
     let mut drivers = HashMap::new();
     drivers.insert(tui::Effect::Comet, comet::build_driver());
     drivers.insert(tui::Effect::Ripples, ripples::build_driver());
+    drivers.insert(tui::Effect::Warpspeed, warpspeed::build_driver());
 
     let mut app = tui::App::new(sled, drivers);
 
