@@ -20,8 +20,8 @@ use std::{
 fn main() -> Result<()> {
     let sled = Sled::new("./config.toml").unwrap();
     let mut drivers = HashMap::new();
-    drivers.insert(tui::Effects::Comet, comet::build_driver());
-    drivers.insert(tui::Effects::Ripples, ripples::build_driver());
+    drivers.insert(tui::Effect::Comet, comet::build_driver());
+    drivers.insert(tui::Effect::Ripples, ripples::build_driver());
 
     let mut app = tui::App::new(sled, drivers);
 

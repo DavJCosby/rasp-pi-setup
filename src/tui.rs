@@ -24,19 +24,19 @@ enum SelectableWidget {
     Settings,
 }
 
-#[derive(PartialEq, Eq, Hash)]
-pub enum Effects {
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+pub enum Effect {
     Comet,
     Ripples,
     Warpspeed,
 }
 
-impl Effects {
+impl Effect {
     pub fn as_str(&self) -> &str {
         match self {
-            Effects::Comet => "Comet",
-            Effects::Ripples => "Ripples",
-            Effects::Warpspeed => "Warpspeed",
+            Effect::Comet => "Comet",
+            Effect::Ripples => "Ripples",
+            Effect::Warpspeed => "Warpspeed",
         }
     }
 }
@@ -52,16 +52,15 @@ pub struct App {
     should_pause: bool,
     selected_widget: SelectableWidget,
     terminal: Terminal<CrosstermBackend<Stdout>>,
-    sled: Sled,
-    drivers: HashMap<Effects, Driver>,
-    current_effect: Option<Effects>,
+    drivers: HashMap<Effect, Driver>,
+    current_effect: Effect,
 
     /* effects widget */
     effects_list_state: ListState,
 }
 
 impl App {
-    pub fn new(sled: Sled, drivers: HashMap<Effects, Driver>) -> Self {
+    pub fn new(sled: Sled, mut drivers: HashMap<Effect, Driver>) -> Self {
         stdout().execute(EnterAlternateScreen).unwrap();
         enable_raw_mode().unwrap();
         let mut terminal = Terminal::new(CrosstermBackend::new(stdout())).unwrap();
@@ -70,14 +69,17 @@ impl App {
         let mut effects_list_state = ListState::default();
         effects_list_state.select(Some(0));
 
+        let first_effect = drivers.keys().into_iter().next().unwrap().clone();
+        let first_driver = drivers.get_mut(&first_effect).unwrap();
+        first_driver.mount(sled);
+
         App {
             should_quit: false,
             should_pause: false,
             selected_widget: SelectableWidget::Effects,
             terminal,
-            sled,
             drivers,
-            current_effect: None,
+            current_effect: first_effect,
             effects_list_state,
         }
     }
@@ -107,22 +109,43 @@ impl App {
                 ])
                 .split(frame.size());
 
-            let items = ["Comet", "Ripples", "Warpspeed"];
+            let items = self
+                .drivers
+                .keys()
+                .into_iter()
+                .map(|effect_enum| effect_enum.as_str())
+                .collect::<Vec<&str>>();
+
+            let mut default_style = Style::default();
+            let mut highlight_style = Style::default().reversed();
+            let mut highlight_symbol = "   ";
+            let mut effects_title = " Effects ";
+            if self.should_pause {
+                default_style = Style::default().italic();
+                highlight_style = Style::default().not_italic().bold();
+                highlight_symbol = " > ";
+                effects_title = " Effects* ";
+            }
 
             let list = List::new(items)
                 .block(Block::default().title("List").borders(Borders::ALL))
-                .style(Style::default().fg(Color::White))
-                .highlight_style(Style::default().reversed())
-                .highlight_symbol(" > ")
+                .style(default_style)
+                .highlight_style(highlight_style)
+                .highlight_symbol(highlight_symbol)
                 .repeat_highlight_symbol(true)
                 .direction(ListDirection::TopToBottom);
 
             frame.render_stateful_widget(list, layout[0], &mut self.effects_list_state);
 
-            let effect = match &self.current_effect {
-                Some(e) => e.as_str(),
-                None => "BLANK",
-            };
+            frame.render_widget(
+                Block::new()
+                    .borders(Borders::ALL)
+                    .title(effects_title)
+                    .yellow(),
+                layout[0],
+            );
+
+            let effect = self.current_effect.as_str();
 
             let running_state = if self.should_pause {
                 "PAUSED"
@@ -130,7 +153,7 @@ impl App {
                 "RUNNING"
             };
 
-            let visualizer_title = format!("{} [{}]", effect, running_state);
+            let visualizer_title = format!(" {} [{}] ", effect, running_state);
 
             frame.render_widget(
                 Block::new()
@@ -141,14 +164,9 @@ impl App {
             );
 
             frame.render_widget(
-                Block::new().borders(Borders::ALL).title("Effects").yellow(),
-                layout[0],
-            );
-
-            frame.render_widget(
                 Block::new()
                     .borders(Borders::ALL)
-                    .title("Settings")
+                    .title(" Settings ")
                     .magenta(),
                 layout[2],
             );
@@ -193,6 +211,17 @@ impl App {
             }
             KeyCode::Enter => {
                 self.should_pause = false;
+                if let Some(e) = self.effects_list_state.selected() {
+                    let old_effect = self.current_effect;
+
+                    let effects = self.drivers.keys().into_iter().collect::<Vec<&Effect>>();
+                    self.current_effect = *effects[e];
+
+                    let old_driver = self.drivers.get_mut(&old_effect).unwrap();
+                    let sled = old_driver.dismount();
+                    let new_driver = self.drivers.get_mut(&self.current_effect).unwrap();
+                    new_driver.mount(sled);
+                }
             }
 
             _ => {}
