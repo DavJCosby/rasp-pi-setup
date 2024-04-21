@@ -4,17 +4,18 @@ use std::{
 };
 
 use crossterm::{
-    event::{self, KeyCode, KeyEvent, KeyEventKind},
+    event::{self, KeyCode, KeyEventKind},
     terminal::{enable_raw_mode, EnterAlternateScreen},
     ExecutableCommand,
 };
 use ratatui::{
     layout::{Constraint, Direction, Layout},
-    prelude::*,
-    prelude::{CrosstermBackend, Stylize, Terminal},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, List, ListDirection, ListState, Paragraph},
-    Frame,
+    prelude::{CrosstermBackend, Stylize, Terminal, *},
+    style::{Color, Style},
+    widgets::{
+        canvas::{Canvas, Circle},
+        Block, Borders, List, ListDirection, ListState,
+    },
 };
 
 use sled::{driver::Driver, Sled};
@@ -94,12 +95,15 @@ impl App {
         }
 
         self.draw()?;
-
+        if !self.should_pause {
+            self.drivers.get_mut(&self.current_effect).unwrap().step();
+        }
         Ok(())
     }
 
     pub fn draw(&mut self) -> std::io::Result<()> {
         self.terminal.draw(|frame| {
+            /* variables */
             let layout = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([
@@ -116,6 +120,7 @@ impl App {
                 .map(|effect_enum| effect_enum.as_str())
                 .collect::<Vec<&str>>();
 
+            /* effects selector */
             let mut default_style = Style::default();
             let mut highlight_style = Style::default().reversed();
             let mut highlight_symbol = "   ";
@@ -152,6 +157,8 @@ impl App {
                 layout[0],
             );
 
+            /* visualizer */
+
             let effect = self.current_effect.as_str();
 
             let running_state = if self.should_pause {
@@ -162,14 +169,45 @@ impl App {
 
             let visualizer_title = format!(" {} [{}] ", effect, running_state);
 
-            frame.render_widget(
-                Block::new()
-                    .borders(Borders::ALL)
-                    .title(visualizer_title)
-                    .green(),
-                layout[1],
-            );
+            let current_driver = &self.drivers[&self.current_effect];
+            let sled = current_driver.sled().unwrap();
+            let domain = sled.domain();
+            let center = sled.center_point();
+            let x_bounds = [domain.start.x as f64, domain.end.x as f64];
+            let y_bounds = [domain.start.y as f64, domain.end.y as f64];
 
+            let canvas = Canvas::default()
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(visualizer_title)
+                        .green(),
+                )
+                .marker(Marker::HalfBlock)
+                .x_bounds(x_bounds)
+                .y_bounds(y_bounds);
+
+            let canvas = canvas.paint(|ctx| {
+                ctx.draw(&Circle {
+                    x: center.x as f64,
+                    y: center.y as f64,
+                    radius: (y_bounds[1] - y_bounds[0]) * 0.01,
+                    color: Color::Rgb(200, 200, 200),
+                });
+
+                for (col, pos) in current_driver.colors_and_positions_coerced::<u8>() {
+                    ctx.draw(&Circle {
+                        x: pos.x as f64,
+                        y: pos.y as f64,
+                        radius: 0.0,
+                        color: Color::Rgb(col.red, col.green, col.blue),
+                    });
+                }
+            });
+
+            frame.render_widget(canvas, layout[1]);
+
+            /* settings panel */
             let settings_title_style = if let SelectableWidget::Settings = self.selected_widget {
                 Style::default().reversed()
             } else {
