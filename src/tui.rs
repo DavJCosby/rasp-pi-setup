@@ -107,9 +107,9 @@ impl App {
             let layout = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints([
-                    Constraint::Percentage(25),
+                    Constraint::Percentage(20),
                     Constraint::Percentage(60),
-                    Constraint::Percentage(25),
+                    Constraint::Percentage(20),
                 ])
                 .split(frame.size());
 
@@ -192,7 +192,7 @@ impl App {
                     x: center.x as f64,
                     y: center.y as f64,
                     radius: (y_bounds[1] - y_bounds[0]) * 0.01,
-                    color: Color::Rgb(200, 200, 200),
+                    color: Color::Rgb(128, 128, 128),
                 });
 
                 for (col, pos) in current_driver.colors_and_positions_coerced::<u8>() {
