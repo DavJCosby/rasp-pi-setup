@@ -88,6 +88,8 @@ impl App {
     }
 
     pub fn heartbeat(&mut self) -> std::io::Result<()> {
+        self.last_update = Instant::now();
+
         if event::poll(std::time::Duration::from_millis(1))? {
             if let event::Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
@@ -97,9 +99,8 @@ impl App {
         }
 
         println!("{}", self.last_update.elapsed().as_nanos());
-        self.last_update = Instant::now();
 
-        // self.draw()?;
+        self.draw()?;
         // if !self.should_pause {
             // self.drivers.get_mut(&self.current_effect).unwrap().step();
         // }
