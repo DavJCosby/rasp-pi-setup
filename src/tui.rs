@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    io::{stdout, Stdout},
+    io::{stdout, Stdout}, time::Instant,
 };
 
 use crossterm::{
@@ -55,6 +55,7 @@ pub struct App {
     terminal: Terminal<CrosstermBackend<Stdout>>,
     drivers: HashMap<Effect, Driver>,
     current_effect: Effect,
+    last_update: Instant,
 
     /* effects widget */
     effects_list_state: ListState,
@@ -82,6 +83,7 @@ impl App {
             drivers,
             current_effect: first_effect,
             effects_list_state,
+            last_update: Instant::now()
         }
     }
 
@@ -94,10 +96,13 @@ impl App {
             }
         }
 
-        self.draw()?;
-        if !self.should_pause {
-            self.drivers.get_mut(&self.current_effect).unwrap().step();
-        }
+        println!("{}", self.last_update.elapsed().as_nanos());
+        self.last_update = Instant::now();
+
+        // self.draw()?;
+        // if !self.should_pause {
+            // self.drivers.get_mut(&self.current_effect).unwrap().step();
+        // }
         Ok(())
     }
 
@@ -191,7 +196,7 @@ impl App {
                 ctx.draw(&Circle {
                     x: center.x as f64,
                     y: center.y as f64,
-                    radius: (y_bounds[1] - y_bounds[0]) * 0.01,
+                    radius: (y_bounds[1] - y_bounds[0]) * 0.0025,
                     color: Color::Rgb(128, 128, 128),
                 });
 
