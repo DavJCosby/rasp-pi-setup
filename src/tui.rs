@@ -96,8 +96,8 @@ impl App {
                 }
             }
         }
-        // terminal draws 50x a second max
-        if self.last_draw.elapsed().as_nanos() > 20000000 {
+        // terminal draws 40x a second max
+        if self.last_draw.elapsed().as_nanos() > 25000000 {
             self.draw()?;
             self.last_draw = Instant::now();
         }
