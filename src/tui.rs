@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
-    io::{stdout, Stdout}, time::Instant,
+    io::{stdout, Stdout},
+    time::Instant,
 };
 
 use crossterm::{
@@ -13,7 +14,7 @@ use ratatui::{
     prelude::{CrosstermBackend, Stylize, Terminal, *},
     style::{Color, Style},
     widgets::{
-        canvas::{Canvas, Circle},
+        canvas::{Canvas, Circle, Shape},
         Block, Borders, List, ListDirection, ListState,
     },
 };
@@ -83,13 +84,11 @@ impl App {
             drivers,
             current_effect: first_effect,
             effects_list_state,
-            last_update: Instant::now()
+            last_update: Instant::now(),
         }
     }
 
     pub fn heartbeat(&mut self) -> std::io::Result<()> {
-        self.last_update = Instant::now();
-
         if event::poll(std::time::Duration::from_millis(1))? {
             if let event::Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
@@ -98,11 +97,13 @@ impl App {
             }
         }
 
-        println!("{}", self.last_update.elapsed().as_nanos());
+        self.last_update = Instant::now();
 
         self.draw()?;
+        println!("{}", self.last_update.elapsed().as_nanos());
+
         // if !self.should_pause {
-            // self.drivers.get_mut(&self.current_effect).unwrap().step();
+        // self.drivers.get_mut(&self.current_effect).unwrap().step();
         // }
         Ok(())
     }
@@ -194,18 +195,17 @@ impl App {
                 .y_bounds(y_bounds);
 
             let canvas = canvas.paint(|ctx| {
-                ctx.draw(&Circle {
+                ctx.draw(&Point {
                     x: center.x as f64,
                     y: center.y as f64,
-                    radius: (y_bounds[1] - y_bounds[0]) * 0.0025,
                     color: Color::Rgb(128, 128, 128),
                 });
 
+
                 for (col, pos) in current_driver.colors_and_positions_coerced::<u8>() {
-                    ctx.draw(&Circle {
+                    ctx.draw(&Point {
                         x: pos.x as f64,
                         y: pos.y as f64,
-                        radius: 0.0,
                         color: Color::Rgb(col.red, col.green, col.blue),
                     });
                 }
@@ -308,3 +308,18 @@ impl App {
         }
     }
 }
+
+struct Point {
+    pub x: f64,
+    pub y: f64,
+    pub color: Color,
+}
+
+impl Shape for Point {
+    fn draw(&self, painter: &mut ratatui::widgets::canvas::Painter) {
+        if let Some((x, y)) = painter.get_point(self.x, self.y) {
+            painter.paint(x, y, self.color);
+        }
+    }
+}
+
