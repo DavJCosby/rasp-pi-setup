@@ -56,7 +56,7 @@ pub struct App {
     terminal: Terminal<CrosstermBackend<Stdout>>,
     drivers: HashMap<Effect, Driver>,
     current_effect: Effect,
-    last_update: Instant,
+    last_draw: Instant,
 
     /* effects widget */
     effects_list_state: ListState,
@@ -84,7 +84,7 @@ impl App {
             drivers,
             current_effect: first_effect,
             effects_list_state,
-            last_update: Instant::now(),
+            last_draw: Instant::now(),
         }
     }
 
@@ -96,15 +96,16 @@ impl App {
                 }
             }
         }
+        // terminal draws 50x a second max
+        if self.last_draw.elapsed().as_nanos() > 20000000 {
+            self.draw()?;
+            self.last_draw = Instant::now();
+        }
 
-        self.last_update = Instant::now();
+        if !self.should_pause {
+            self.drivers.get_mut(&self.current_effect).unwrap().step();
+        }
 
-        self.draw()?;
-        println!("{}", self.last_update.elapsed().as_nanos());
-
-        // if !self.should_pause {
-        // self.drivers.get_mut(&self.current_effect).unwrap().step();
-        // }
         Ok(())
     }
 
@@ -200,7 +201,6 @@ impl App {
                     y: center.y as f64,
                     color: Color::Rgb(128, 128, 128),
                 });
-
 
                 for (col, pos) in current_driver.colors_and_positions_coerced::<u8>() {
                     ctx.draw(&Point {
@@ -322,4 +322,3 @@ impl Shape for Point {
         }
     }
 }
-
