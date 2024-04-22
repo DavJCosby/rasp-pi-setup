@@ -89,7 +89,7 @@ impl App {
     }
 
     pub fn heartbeat(&mut self) -> std::io::Result<()> {
-        if event::poll(std::time::Duration::from_millis(1))? {
+        if event::poll(std::time::Duration::from_nanos(50))? {
             if let event::Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     self.handle_input(key.code);
@@ -197,15 +197,15 @@ impl App {
 
             let canvas = canvas.paint(|ctx| {
                 ctx.draw(&Point {
-                    x: center.x as f64,
-                    y: center.y as f64,
+                    x: center.x,
+                    y: center.y,
                     color: Color::Rgb(128, 128, 128),
                 });
 
                 for (col, pos) in current_driver.colors_and_positions_coerced::<u8>() {
                     ctx.draw(&Point {
-                        x: pos.x as f64,
-                        y: pos.y as f64,
+                        x: pos.x,
+                        y: pos.y,
                         color: Color::Rgb(col.red, col.green, col.blue),
                     });
                 }
@@ -310,14 +310,14 @@ impl App {
 }
 
 struct Point {
-    pub x: f64,
-    pub y: f64,
+    pub x: f32,
+    pub y: f32,
     pub color: Color,
 }
 
 impl Shape for Point {
     fn draw(&self, painter: &mut ratatui::widgets::canvas::Painter) {
-        if let Some((x, y)) = painter.get_point(self.x, self.y) {
+        if let Some((x, y)) = painter.get_point(self.x as f64, self.y as f64) {
             painter.paint(x, y, self.color);
         }
     }
