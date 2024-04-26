@@ -54,9 +54,10 @@ pub struct App {
     should_pause: bool,
     selected_widget: SelectableWidget,
     terminal: Terminal<CrosstermBackend<Stdout>>,
-    drivers: HashMap<Effect, Driver>,
-    current_effect: Effect,
+    pub drivers: HashMap<Effect, Driver>,
+    pub current_effect: Effect,
     last_draw: Instant,
+    positions: Vec<sled::Vec2>,
 
     /* effects widget */
     effects_list_state: ListState,
@@ -75,7 +76,7 @@ impl App {
         let first_effect = drivers.keys().into_iter().next().unwrap().clone();
         let first_driver = drivers.get_mut(&first_effect).unwrap();
         first_driver.mount(sled);
-
+        let positions = first_driver.positions().collect();
         App {
             should_quit: false,
             should_pause: false,
@@ -83,6 +84,7 @@ impl App {
             terminal,
             drivers,
             current_effect: first_effect,
+            positions,
             effects_list_state,
             last_draw: Instant::now(),
         }

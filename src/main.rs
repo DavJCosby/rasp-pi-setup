@@ -1,5 +1,5 @@
-// use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
-// use sled::{color::Srgb, Sled};
+use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
+use sled::{color::Srgb, Sled};
 
 mod effects;
 mod tui;
@@ -9,8 +9,6 @@ use crossterm::{
     terminal::{disable_raw_mode, LeaveAlternateScreen},
     ExecutableCommand,
 };
-
-use sled::Sled;
 
 use std::{
     collections::HashMap,
@@ -25,10 +23,14 @@ fn main() -> Result<()> {
     drivers.insert(tui::Effect::Warpspeed, warpspeed::build_driver());
 
     let mut app = tui::App::new(sled, drivers);
+    let mut gpio_controller = construct_gpio_controller(400);
 
     while !app.should_quit() {
         app.heartbeat()?;
-        if !app.should_pause() {}
+        if !app.should_pause() {
+            let colors = app.drivers.get(&app.current_effect).unwrap().colors_coerced::<u8>();
+            update_gpio(&mut gpio_controller, colors);
+        }
     }
 
     stdout().execute(LeaveAlternateScreen)?;
@@ -43,7 +45,6 @@ fn main() -> Result<()> {
 //     let mut driver = ripples::build_driver();
 //     driver.mount(sled);
 
-//     let mut gpio_controller = construct_gpio_controller(num_leds);
 
 //     loop {
 //         driver.step();
@@ -52,29 +53,29 @@ fn main() -> Result<()> {
 //     }
 // }
 
-// fn construct_gpio_controller(num_leds: usize) -> Controller {
-//     ControllerBuilder::new()
-//         .channel(
-//             0,
-//             ChannelBuilder::new()
-//                 .pin(18)
-//                 .count(num_leds as i32)
-//                 .strip_type(rs_ws281x::StripType::Ws2811Gbr)
-//                 .brightness(255)
-//                 .build(),
-//         )
-//         .build()
-//         .unwrap()
-// }
+fn construct_gpio_controller(num_leds: usize) -> Controller {
+    ControllerBuilder::new()
+        .channel(
+            0,
+            ChannelBuilder::new()
+                .pin(18)
+                .count(num_leds as i32)
+                .strip_type(rs_ws281x::StripType::Ws2811Gbr)
+                .brightness(255)
+                .build(),
+        )
+        .build()
+        .unwrap()
+}
 
-// fn update_gpio(controller: &mut Controller, colors: impl Iterator<Item = Srgb<u8>>) {
-//     let leds = controller.leds_mut(0);
+fn update_gpio(controller: &mut Controller, colors: impl Iterator<Item = Srgb<u8>>) {
+    let leds = controller.leds_mut(0);
 
-//     let mut i = 0;
-//     for color in colors {
-//         leds[i] = [color.red, color.green, color.blue, 0];
-//         i += 1;
-//     }
+    let mut i = 0;
+    for color in colors {
+        leds[i] = [color.red, color.green, color.blue, 0];
+        i += 1;
+    }
 
-//     controller.render().unwrap();
-// }
+    controller.render().unwrap();
+}
