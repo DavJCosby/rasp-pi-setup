@@ -15,43 +15,43 @@ use std::{
     io::{stdout, Result},
 };
 
-fn main() -> Result<()> {
-    let sled = Sled::new("./config.toml").unwrap();
-    let mut drivers = HashMap::new();
-    drivers.insert(tui::Effect::Comet, comet::build_driver());
-    drivers.insert(tui::Effect::Ripples, ripples::build_driver());
-    drivers.insert(tui::Effect::Warpspeed, warpspeed::build_driver());
-
-    let mut app = tui::App::new(sled, drivers);
-    let mut gpio_controller = construct_gpio_controller(400);
-
-    while !app.should_quit() {
-        app.heartbeat()?;
-        if !app.should_pause() {
-            let colors = app.drivers.get(&app.current_effect).unwrap().colors_coerced::<u8>();
-            update_gpio(&mut gpio_controller, colors);
-        }
-    }
-
-    stdout().execute(LeaveAlternateScreen)?;
-    disable_raw_mode()?;
-    Ok(())
-}
-
-// fn main() {
+// fn main() -> Result<()> {
 //     let sled = Sled::new("./config.toml").unwrap();
-//     let num_leds = sled.num_leds();
+//     let mut drivers = HashMap::new();
+//     drivers.insert(tui::Effect::Comet, comet::build_driver());
+//     drivers.insert(tui::Effect::Ripples, ripples::build_driver());
+//     drivers.insert(tui::Effect::Warpspeed, warpspeed::build_driver());
 
-//     let mut driver = ripples::build_driver();
-//     driver.mount(sled);
+//     let mut app = tui::App::new(sled, drivers);
+//     let mut gpio_controller = construct_gpio_controller(400);
 
-
-//     loop {
-//         driver.step();
-//         let colors = driver.colors_coerced::<u8>();
-//         update_gpio(&mut gpio_controller, colors);
+//     while !app.should_quit() {
+//         app.heartbeat()?;
+//         if !app.should_pause() {
+//             let colors = app.drivers.get(&app.current_effect).unwrap().colors_coerced::<u8>();
+//             update_gpio(&mut gpio_controller, colors);
+//         }
 //     }
+
+//     stdout().execute(LeaveAlternateScreen)?;
+//     disable_raw_mode()?;
+//     Ok(())
 // }
+
+fn main() {
+    let sled = Sled::new("./config.toml").unwrap();
+    let num_leds = sled.num_leds();
+
+    let mut driver = ripples::build_driver();
+    driver.mount(sled);
+
+
+    loop {
+        driver.step();
+        let colors = driver.colors_coerced::<u8>();
+        update_gpio(&mut gpio_controller, colors);
+    }
+}
 
 fn construct_gpio_controller(num_leds: usize) -> Controller {
     ControllerBuilder::new()
