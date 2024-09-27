@@ -1,3 +1,4 @@
+use core::num;
 use std::time::Instant;
 
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
@@ -43,6 +44,7 @@ use effects::*;
 fn main() {
     let sled = Sled::new("./config.yap").unwrap();
     let num_leds = sled.num_leds();
+    println!("Starting SLED system of {} LEDs.", num_leds);
 
     let mut driver = ripples::build_driver();
     driver.mount(sled);
