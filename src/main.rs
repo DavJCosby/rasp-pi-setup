@@ -45,6 +45,7 @@ fn main() {
     let mut driver = ripples::build_driver();
     driver.mount(sled);
 
+    let mut gpio_controller = construct_gpio_controller(num_leds);
 
     loop {
         driver.step();
