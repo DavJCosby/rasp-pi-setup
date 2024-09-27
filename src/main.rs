@@ -1,8 +1,10 @@
+use std::time::Instant;
+
 use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
 use sled::{color::Srgb, Sled};
 
 mod effects;
-mod tui;
+// mod tui;
 use effects::*;
 
 // use crossterm::{
@@ -46,8 +48,16 @@ fn main() {
     driver.mount(sled);
 
     let mut gpio_controller = construct_gpio_controller(num_leds);
-
+    let mut last_printout = Instant::now();
+    let mut updates = 0;
     loop {
+        updates += 1;
+        if last_printout.elapsed().as_secs_f32() > 2.0 {
+            let hz = (updates as f32) / 2.0;
+            println!("Running at {} Hz.", hz);
+            updates = 0;
+            last_printout = Instant::now();
+        }
         driver.step();
         let colors = driver.colors_coerced::<u8>();
         update_gpio(&mut gpio_controller, colors);
