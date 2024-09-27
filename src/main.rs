@@ -39,7 +39,7 @@ use std::{
 // }
 
 fn main() {
-    let sled = Sled::new("./config.toml").unwrap();
+    let sled = Sled::new("./config.yap").unwrap();
     let num_leds = sled.num_leds();
 
     let mut driver = ripples::build_driver();

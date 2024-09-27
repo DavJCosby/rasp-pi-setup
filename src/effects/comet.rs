@@ -1,5 +1,7 @@
-use sled::driver::{BufferContainer, Driver, Filters, TimeInfo};
-use sled::{color::Rgb, Sled, SledError};
+use driver_macros::*;
+use sled::driver::{Driver, TimeInfo};
+use sled::SledResult;
+use sled::{color::Rgb, Sled};
 
 use std::f32::consts::TAU;
 const INV_TAU: f32 = 1.0 / TAU;
@@ -21,12 +23,8 @@ pub fn build_driver() -> Driver {
     driver
 }
 
-fn draw(
-    sled: &mut Sled,
-    _buffers: &BufferContainer,
-    _filters: &Filters,
-    time_info: &TimeInfo,
-) -> Result<(), SledError> {
+#[draw_commands]
+fn draw(sled: &mut Sled, time_info: &TimeInfo) -> SledResult {
     let elapsed = time_info.elapsed.as_secs_f32();
 
     let inner_time_scale = elapsed / GREEN_RADIUS;
