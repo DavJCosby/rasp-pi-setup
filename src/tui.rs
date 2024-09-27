@@ -20,6 +20,7 @@ use ratatui::{
 };
 
 use sled::{driver::Driver, Sled};
+use symbols::Marker;
 
 enum SelectableWidget {
     Effects,
@@ -121,7 +122,7 @@ impl App {
                     Constraint::Percentage(60),
                     Constraint::Percentage(20),
                 ])
-                .split(frame.size());
+                .split(frame.area());
 
             let items = self
                 .drivers

@@ -5,15 +5,15 @@ mod effects;
 mod tui;
 use effects::*;
 
-use crossterm::{
-    terminal::{disable_raw_mode, LeaveAlternateScreen},
-    ExecutableCommand,
-};
+// use crossterm::{
+//     terminal::{disable_raw_mode, LeaveAlternateScreen},
+//     ExecutableCommand,
+// };
 
-use std::{
-    collections::HashMap,
-    io::{stdout, Result},
-};
+// use std::{
+//     collections::HashMap,
+//     io::{stdout, Result},
+// };
 
 // fn main() -> Result<()> {
 //     let sled = Sled::new("./config.toml").unwrap();

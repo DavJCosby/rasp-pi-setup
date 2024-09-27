@@ -1,7 +1,8 @@
 use driver_macros::*;
 use rand::Rng;
 use sled::driver::{BufferContainer, Driver, TimeInfo};
-use sled::SledResult;
+use sled::{driver_macros, SledResult};
+
 use sled::{color::Rgb, Sled, Vec2};
 use std::ops::Range;
 
