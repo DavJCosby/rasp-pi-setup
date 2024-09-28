@@ -87,9 +87,9 @@ fn update_gpio<'a>(controller: &mut Controller, colors: impl Iterator<Item = &'a
     let mut i = 0;
     for color in colors {
         leds[i] = [
-            (color.color.red * 255.0) as usize,
-            (color.color.green * 255.0) as usize,
-            (color.color.blue * 255.0) as usize,
+            (color.color.red * 255.0) as u8,
+            (color.color.green * 255.0) as u8,
+            (color.color.blue * 255.0) as u8,
             0,
         ];
         i += 1;
