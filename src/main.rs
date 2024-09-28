@@ -62,7 +62,7 @@ fn main() {
         }
         driver.step();
         let leds = driver.leds();
-        update_gpio(&mut gpio_controller, colors);
+        update_gpio(&mut gpio_controller, leds);
     }
 }
 
@@ -87,9 +87,9 @@ fn update_gpio<'a>(controller: &mut Controller, colors: impl Iterator<Item = &'a
     let mut i = 0;
     for color in colors {
         leds[i] = [
-            (color.red * 255.0) as usize,
-            (color.green * 255.0) as usize,
-            (color.blue * 255.0) as usize,
+            (color.color.red * 255.0) as usize,
+            (color.color.green * 255.0) as usize,
+            (color.color.blue * 255.0) as usize,
             0,
         ];
         i += 1;
