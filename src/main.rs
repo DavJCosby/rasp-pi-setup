@@ -61,8 +61,8 @@ fn main() {
             last_printout = Instant::now();
         }
         driver.step();
-        let leds = driver.leds();
-        update_gpio(&mut gpio_controller, leds);
+        let colors = driver.colors();
+        update_gpio(&mut gpio_controller, colors);
     }
 }
 
@@ -81,15 +81,15 @@ fn construct_gpio_controller(num_leds: usize) -> Controller {
         .unwrap()
 }
 
-fn update_gpio<'a>(controller: &mut Controller, colors: impl Iterator<Item = &'a sled::Led>) {
+fn update_gpio<'a>(controller: &mut Controller, colors: impl Iterator<Item = &'a Srgb>) {
     let leds = controller.leds_mut(0);
 
     let mut i = 0;
     for color in colors {
         leds[i] = [
-            (color.color.red * 255.0) as u8,
-            (color.color.green * 255.0) as u8,
-            (color.color.blue * 255.0) as u8,
+            (color.red * 255.0) as u8,
+            (color.green * 255.0) as u8,
+            (color.blue * 255.0) as u8,
             0,
         ];
         i += 1;
