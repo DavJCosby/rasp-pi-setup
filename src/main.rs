@@ -74,9 +74,11 @@ fn construct_gpio_controller(num_leds: usize) -> Controller {
                 .pin(18)
                 .count(num_leds as i32)
                 .strip_type(rs_ws281x::StripType::Ws2811Gbr)
+                
                 .brightness(255)
                 .build(),
         )
+        .render_wait_time(0)
         .build()
         .unwrap()
 }
