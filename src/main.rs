@@ -81,7 +81,7 @@ fn construct_gpio_controller(num_leds: usize) -> Controller {
         .unwrap()
 }
 
-fn update_gpio(controller: &mut Controller, colors: impl Iterator<Item = &sled::Led>) {
+fn update_gpio<'a>(controller: &mut Controller, colors: impl Iterator<Item = &'a sled::Led>) {
     let leds = controller.leds_mut(0);
 
     let mut i = 0;
