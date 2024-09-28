@@ -1,8 +1,7 @@
+use core::num;
 use std::time::Instant;
 
-use rpi_ws281x_c::{Channel, Driver, DriverBuilder, SpiPin};
-
-//use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
+use rs_ws281x::{ChannelBuilder, Controller, ControllerBuilder};
 use sled::{color::Srgb, Sled};
 
 mod effects;
@@ -67,52 +66,35 @@ fn main() {
     }
 }
 
-fn construct_gpio_controller(num_leds: usize) -> Driver {
-    DriverBuilder::new()
-        .channel1(
-            Channel::set_spi(SpiPin::Spi0)
-                .set_led_count(num_leds as u16)
-                .set_strip_gbr(),
+fn construct_gpio_controller(num_leds: usize) -> Controller {
+    ControllerBuilder::new()
+        
+        .channel(
+            0,
+            ChannelBuilder::new()
+                .pin(18)
+                .count(num_leds as i32)
+                .strip_type(rs_ws281x::StripType::Ws2811Gbr)
+                .brightness(255)
+                .build(),
         )
         .build()
         .unwrap()
-
-    // ControllerBuilder::new()
-
-    //     .channel(
-    //         0,
-    //         ChannelBuilder::new()
-    //             .pin(18)
-    //             .count(num_leds as i32)
-    //             .strip_type(rs_ws281x::StripType::Ws2811Gbr)
-    //             .brightness(255)
-    //             .build(),
-    //     )
-    //     .build()
-    //     .unwrap()
 }
 
-fn update_gpio<'a>(controller: &mut Driver, colors: impl Iterator<Item = &'a Srgb>) {
-    let channel = controller.channel1_mut();
-    let leds = channel.leds_mut();
+fn update_gpio<'a>(controller: &mut Controller, colors: impl Iterator<Item = &'a Srgb>) {
+    let leds = controller.leds_mut(0);
 
-    for led in leds {
-        *led = std::u32::MAX; // white?
+    let mut i = 0;
+    for color in colors {
+        leds[i] = [
+            (color.red * 255.0) as u8,
+            (color.green * 255.0) as u8,
+            (color.blue * 255.0) as u8,
+            0,
+        ];
+        i += 1;
     }
 
     controller.render().unwrap();
-    // let leds = controller.leds_mut(0);
-
-    // let mut i = 0;
-    // for color in colors {
-    //     leds[i] = [
-    //         (color.red * 255.0) as u8,
-    //         (color.green * 255.0) as u8,
-    //         (color.blue * 255.0) as u8,
-    //         0,
-    //     ];
-    //     i += 1;
-    // }
-
-    // controller.render().unwrap();
 }

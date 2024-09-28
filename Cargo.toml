@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# rs_ws281x = "0.5.1"
-rpi_ws281x-c = "0.1.5"
+rs_ws281x = "0.5.1"
+# rpi_ws281x-c = "0.1.5"
 sled = {git = "https://github.com/DavJCosby/sled/", default-features = false, features = ["drivers"]}
 rand = {version = "0.8.5", default-features = false, features = ["std", "std_rng"]}
 # crossterm = "0.28"
